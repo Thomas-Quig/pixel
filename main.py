@@ -25,4 +25,4 @@ if __name__ == "__main__":
     limiter = flask_limiter.Limiter(
         app, key_func=flask_limiter.util.get_remote_address)
 
-    app.run(args.host, args.port)
+    app.run(args.host, args.port, threaded=True)
