@@ -58,11 +58,12 @@ def pixel():
     Send a pixel color, and x and y coordinates to render the pixel.
     """
     try:
-        if request.method == 'POST':
+
+        if flask.request.method == 'POST':
             x = int(flask.request.form.get('x'))
             y = int(flask.request.form.get('y'))
             color = flask.request.form.get('color')
-        elif request.method == 'GET':
+        elif flask.request.method == 'GET':
             x = int(flask.request.args.get('x'))
             y = int(flask.request.args.get('y'))
             color = flask.request.args.get('color')
