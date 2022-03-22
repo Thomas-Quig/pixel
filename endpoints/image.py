@@ -22,33 +22,17 @@ log = logging.getLogger(__name__)
 blueprint_image = flask.Blueprint('blueprint_image', __name__)
 create_bmp()
 
-@blueprint_image.route('/', methods=['GET'])
-def readme():
-    """
-    Redirects to GitHub repository.
-    """
-    return flask.redirect("https://www.github.com/acm-uiuc/pixel")
-
-# @limiter.limit("2/minute")
-@blueprint_image.route('/', methods=['POST'])
-def pixel():
-    """
-    Send a pixel color, and x and y coordinates to render the pixel.
-    """
+def send_pixel(x,y,color):
     try:
-        x = int(flask.request.form.get('x'))
-        y = int(flask.request.form.get('y'))
-        color = flask.request.form.get('color')
-
         view.screen.tkapp.w.create_rectangle(
-            x * config.constants.PIXEL_WIDTH,
-            y * config.constants.PIXEL_HEIGHT,
-            x * config.constants.PIXEL_WIDTH + config.constants.PIXEL_WIDTH,
-            y * config.constants.PIXEL_HEIGHT + config.constants.PIXEL_HEIGHT,
-            fill=color,
-            width=0,
-            outline=""
-        )
+                x * config.constants.PIXEL_WIDTH,
+                y * config.constants.PIXEL_HEIGHT,
+                x * config.constants.PIXEL_WIDTH + config.constants.PIXEL_WIDTH,
+                y * config.constants.PIXEL_HEIGHT + config.constants.PIXEL_HEIGHT,
+                fill=color,
+                width=0,
+                outline=""
+            )
 
         parsed_color = webcolors.html5_parse_legacy_color(color)
         write_bmp(x, y, parsed_color.red, parsed_color.green, parsed_color.blue)
@@ -60,6 +44,34 @@ def pixel():
         log.error(traceback.format_exc())
         return construct_response(status="Failure", message="Line:" +  exc_tb.tb_lineno + ", " +  str(e))
 
+@blueprint_image.route('/', methods=['GET'])
+def readme():
+    """
+    Redirects to GitHub repository.
+    """
+    return flask.redirect("https://www.github.com/acm-uiuc/pixel")
+
+# @limiter.limit("2/minute")
+@blueprint_image.route('/', methods=['POST','GET'])
+def pixel():
+    """
+    Send a pixel color, and x and y coordinates to render the pixel.
+    """
+    try:
+        if request.method == 'POST':
+            x = int(flask.request.form.get('x'))
+            y = int(flask.request.form.get('y'))
+            color = flask.request.form.get('color')
+        elif request.method == 'GET':
+            x = int(flask.request.args.get('x'))
+            y = int(flask.request.args.get('y'))
+            color = flask.request.args.get('color')
+        return send_pixel(x,y,color)
+    except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        import traceback
+        log.error(traceback.format_exc())
+        return construct_response(status="Failure", message="Line:" +  exc_tb.tb_lineno + ", " +  str(e))
 
 @blueprint_image.errorhandler(429)
 def image_ratelimit(e):
